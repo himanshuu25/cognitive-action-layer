@@ -1,0 +1,6 @@
+mcp[cli]>=1.0.0
+xlwings>=0.30.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+pytest>=7.4.0
+pytest-timeout>=2.1.0
