@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Action Layer - Installer Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .release {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+        .latest-badge {
+            background-color: #2ecc71;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .release-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .release-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .release-date {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #2980b9;
+        }
+        .release-notes {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff;
+            border-left: 4px solid #3498db;
+            white-space: pre-wrap;
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cognitive Action Layer (CAL)</h1>
+    <p style="text-align: center; color: #7f8c8d;">Download the latest installer and view release notes.</p>
+    
+    <div id="releases-container">
+        <div class="loading">Loading releases from GitHub...</div>
+    </div>
+</div>
+
+<script>
+    const REPO_OWNER = 'himanshuu25';
+    const REPO_NAME = 'cognitive-action-layer';
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases`;
+
+    async function fetchReleases() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) {
+                throw new Error('Failed to fetch releases');
+            }
+            const releases = await response.json();
+            renderReleases(releases);
+        } catch (error) {
+            document.getElementById('releases-container').innerHTML = 
+                `<p style="color: red; text-align: center;">Error loading releases. Please ensure the repository is public or try again later.</p>`;
+            console.error(error);
+        }
+    }
+
+    function renderReleases(releases) {
+        const container = document.getElementById('releases-container');
+        container.innerHTML = '';
+
+        if (releases.length === 0) {
+            container.innerHTML = '<p style="text-align: center;">No releases found yet.</p>';
+            return;
+        }
+
+        releases.forEach((release, index) => {
+            const isLatest = index === 0;
+            const date = new Date(release.published_at).toLocaleDateString();
+            
+            // Find the executable asset
+            const exeAsset = release.assets.find(asset => asset.name.endsWith('.exe'));
+            const downloadUrl = exeAsset ? exeAsset.browser_download_url : '#';
+            const downloadHtml = exeAsset 
+                ? `<a href="${downloadUrl}" class="download-btn">Download ${exeAsset.name}</a>` 
+                : `<p style="color: #e74c3c;">No installer attached to this release.</p>`;
+
+            const releaseHtml = `
+                <div class="release">
+                    <div class="release-header">
+                        <div>
+                            <span class="release-title">${release.name || release.tag_name}</span>
+                            ${isLatest ? '<span class="latest-badge">LATEST</span>' : ''}
+                        </div>
+                        <span class="release-date">Released on ${date}</span>
+                    </div>
+                    ${downloadHtml}
+                    <div class="release-notes">
+                        <strong>Release Notes:</strong><br>
+                        ${release.body || 'No release notes provided.'}
+                    </div>
+                </div>
+            `;
+            container.innerHTML += releaseHtml;
+        });
+    }
+
+    fetchReleases();
+</script>
+
+</body>
+</html>
