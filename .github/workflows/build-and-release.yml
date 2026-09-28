@@ -36,10 +36,7 @@ jobs:
       - name: Build excel_mcp.exe
         run: pyinstaller --clean excel_mcp.spec
 
-      - name: Build install.exe
-        run: pyinstaller --clean install.spec
-
-      - name: Rename install.exe with version
+      - name: Rename excel_mcp.exe with version
         id: rename
         run: |
           $TAG_NAME = "${{ github.ref_name }}"
@@ -47,7 +44,7 @@ jobs:
             $TAG_NAME = "${{ github.event.inputs.version }}"
           }
           $NEW_NAME = "CAL_Installer_$TAG_NAME.exe"
-          Rename-Item -Path dist\install.exe -NewName $NEW_NAME
+          Rename-Item -Path dist\excel_mcp.exe -NewName $NEW_NAME
           echo "file_name=$NEW_NAME" >> $env:GITHUB_OUTPUT
 
       - name: Create Release and Upload Asset
