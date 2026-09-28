@@ -1236,12 +1236,23 @@ def run_gui():
 
         def check_and_kill_process(self, process_names):
             found = False
-            for proc in psutil.process_iter(['name']):
+            current_pid = os.getpid()
+            
+            # Always make sure to kill any old excel_mcp.exe background servers so we can overwrite the file
+            if "excel_mcp.exe" not in process_names:
+                process_names.append("excel_mcp.exe")
+
+            for proc in psutil.process_iter(['pid', 'name']):
                 try:
-                    if proc.info['name'] and proc.info['name'].lower() in [name.lower() for name in process_names]:
+                    name = proc.info['name']
+                    pid = proc.info['pid']
+                    if name and name.lower() in [n.lower() for n in process_names]:
+                        if pid == current_pid:
+                            continue # Don't commit suicide!
+                        
                         if not found:
-                            self.log(f"[*] Found running process: {proc.info['name']}")
-                            self.log("[*] Attempting to close it to avoid file locks...")
+                            self.log(f"[*] Found running process: {name}")
+                            self.log("[*] Closing it to release file locks...")
                             found = True
                         proc.kill()
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
@@ -1249,7 +1260,7 @@ def run_gui():
             
             if found:
                 time.sleep(2)
-                self.log("[+] Process closed.")
+                self.log("[+] Processes closed.")
             return True
 
         def install_bundled_exe(self) -> Path:
